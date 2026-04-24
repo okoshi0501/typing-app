@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  app:
+    build: ./docker/php
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - db
+
+  web:
+    build: ./docker/nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: typing_app
+      MYSQL_USER: typing
+      MYSQL_PASSWORD: typing
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  node:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: sh -c "npm install && npm run dev"
+
+volumes:
+  dbdata:
