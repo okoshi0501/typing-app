@@ -30,8 +30,8 @@ RUN composer install --no-dev --optimize-autoloader
 # SQLite DB 作成
 RUN mkdir -p database && touch database/database.sqlite
 
-# Laravel 最適化
-RUN php artisan config:clear && php artisan config:cache
+# Laravel 最適化（config:cache は削除）
+RUN php artisan config:clear
 
 # Render はポート 10000 を使う
 EXPOSE 10000
