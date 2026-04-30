@@ -8,11 +8,11 @@ RUN apt-get update && apt-get install -y \
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Caddy（公式リポジトリからインストール）
-RUN apt-get update && apt-get install -y debian-keyring debian-archive-keyring curl \
-    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | apt-key add - \
-    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list \
-    && apt-get update && apt-get install -y caddy
+# Caddy（GitHub Releases から直接インストール）
+RUN curl -L "https://github.com/caddyserver/caddy/releases/latest/download/caddy_linux_amd64.tar.gz" \
+    -o /tmp/caddy.tar.gz \
+    && tar -xzf /tmp/caddy.tar.gz -C /usr/bin caddy \
+    && chmod +x /usr/bin/caddy
 
 # プロジェクトコピー
 WORKDIR /var/www/html
