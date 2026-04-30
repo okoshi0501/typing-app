@@ -1,34 +1,29 @@
-# -------------------------
-# PHP-FPM (Laravel)
-# -------------------------
-FROM php:8.4-fpm AS php
+FROM php:8.4-fpm
 
+# 必要パッケージ
 RUN apt-get update && apt-get install -y \
     git unzip libzip-dev libpng-dev libonig-dev libxml2-dev curl \
     && docker-php-ext-install pdo pdo_mysql zip
 
+# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+# Caddy インストール
+RUN curl -fsSL https://caddyserver.com/api/download?os=linux&arch=amd64 | tar -xz -C /usr/bin caddy
 
+# プロジェクトコピー
+WORKDIR /var/www/html
 COPY backend /var/www/html
 
+# Laravel セットアップ
 RUN composer install --no-dev --optimize-autoloader
-
 RUN mkdir -p database && touch database/database.sqlite
-
 RUN php artisan config:clear
 
-
-# -------------------------
-# Caddy (Web Server)
-# -------------------------
-FROM caddy:2 AS web
-
-COPY --from=php /var/www/html /var/www/html
-
+# Caddyfile をコピー
 COPY Caddyfile /etc/caddy/Caddyfile
 
 EXPOSE 10000
 
-CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]
+# php-fpm と Caddy を同一コンテナで起動
+CMD php-fpm & caddy run --config /etc/caddy/Caddyfile

@@ -1,5 +1,5 @@
 :10000
 
 root * /var/www/html/public
-php_fastcgi php:9000
+php_fastcgi localhost:9000
 file_server
