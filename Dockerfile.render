@@ -1,0 +1,54 @@
+# Render 用 Laravel + Vite フロントエンド Dockerfile
+
+FROM php:8.2-fpm
+
+# 必要パッケージ
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libzip-dev \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    curl \
+    && docker-php-ext-install pdo pdo_mysql zip
+
+# Composer インストール
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Node.js インストール（Vite 用）
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+# 作業ディレクトリ
+WORKDIR /var/www/html
+
+# backend と frontend をコピー
+COPY backend ./backend
+COPY frontend ./frontend
+
+# backend に移動して Laravel セットアップ
+WORKDIR /var/www/html/backend
+
+# Composer install
+RUN composer install --no-dev --optimize-autoloader
+
+# SQLite DB 作成
+RUN mkdir -p database && touch database/database.sqlite
+
+# frontend ビルド（Vite）
+WORKDIR /var/www/html/frontend
+RUN npm ci && npm run build
+
+# ビルド成果物を Laravel public にコピー
+WORKDIR /var/www/html/backend
+RUN cp -r /var/www/html/frontend/dist/* public/
+
+# Laravel 最適化
+RUN php artisan config:clear && php artisan config:cache
+
+# Render はポート 10000 を使う
+EXPOSE 10000
+
+# Laravel 起動
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=10000"]
