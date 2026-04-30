@@ -1,6 +1,6 @@
 # Render 用 Laravel + Vite フロントエンド Dockerfile
 
-FROM php:8.2-fpm
+FROM php:8.4-fpm
 
 # 必要パッケージ
 RUN apt-get update && apt-get install -y \
