@@ -2,20 +2,17 @@ FROM php:8.4-fpm
 
 # 必要パッケージ
 RUN apt-get update && apt-get install -y \
-    git unzip libzip-dev libpng-dev libonig-dev libxml2-dev curl gnupg2 debian-keyring debian-archive-keyring \
+    git unzip libzip-dev libpng-dev libonig-dev libxml2-dev curl \
     && docker-php-ext-install pdo pdo_mysql zip
 
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Caddy（apt-key を使わない Cloudsmith 方式）
-RUN curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
-        | gpg --dearmor -o /usr/share/keyrings/caddy.gpg \
-    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
-        | sed 's#deb #deb [signed-by=/usr/share/keyrings/caddy.gpg] #' \
-        | tee /etc/apt/sources.list.d/caddy.list \
+# Caddy（公式 .deb パッケージを直接インストール）
+RUN curl -L "https://github.com/caddyserver/caddy/releases/latest/download/caddy_2.7.6_linux_amd64.deb" \
+    -o /tmp/caddy.deb \
     && apt-get update \
-    && apt-get install -y caddy
+    && apt-get install -y /tmp/caddy.deb
 
 # プロジェクトコピー
 WORKDIR /var/www/html
