@@ -1,43 +1,34 @@
-# Render 用 Laravel Dockerfile（frontend ビルドなし）
+# -------------------------
+# PHP-FPM (Laravel)
+# -------------------------
+FROM php:8.4-fpm AS php
 
-FROM php:8.4-fpm
-
-# 必要パッケージ
 RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libzip-dev \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    curl \
+    git unzip libzip-dev libpng-dev libonig-dev libxml2-dev curl \
     && docker-php-ext-install pdo pdo_mysql zip
 
-# Composer インストール
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# 作業ディレクトリ
 WORKDIR /var/www/html
 
-# backend をコピー
-COPY backend ./backend
-
-# Laravel セットアップ
-WORKDIR /var/www/html/backend
+COPY backend /var/www/html
 
 RUN composer install --no-dev --optimize-autoloader
 
-# SQLite DB 作成
 RUN mkdir -p database && touch database/database.sqlite
 
-# Laravel 最適化（config:cache は削除）
 RUN php artisan config:clear
 
-# Render はポート 10000 を使う
+
+# -------------------------
+# Caddy (Web Server)
+# -------------------------
+FROM caddy:2 AS web
+
+COPY --from=php /var/www/html /var/www/html
+
+COPY Caddyfile /etc/caddy/Caddyfile
+
 EXPOSE 10000
 
-# Laravel 起動（public をドキュメントルートに指定）
-WORKDIR /var/www/html/backend
-CMD ["php", "-S", "0.0.0.0:10000", "-t", "/var/www/html/backend/public"]
-
-
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]
