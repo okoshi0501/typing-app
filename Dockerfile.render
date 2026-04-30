@@ -38,4 +38,5 @@ EXPOSE 10000
 
 # Laravel 起動（public をドキュメントルートに指定）
 WORKDIR /var/www/html/backend
-CMD ["php", "-S", "0.0.0.0:10000", "-t", "public"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=10000"]
+
