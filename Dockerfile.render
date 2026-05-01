@@ -17,7 +17,18 @@ COPY backend /var/www/html
 
 # Laravel セットアップ
 RUN composer install --no-dev --optimize-autoloader
+
+# .env を生成して APP_KEY を作る
+RUN cp .env.example .env \
+    && php artisan key:generate
+
+# SQLite
 RUN mkdir -p database && touch database/database.sqlite
+
+# 権限
+RUN chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
+
 RUN php artisan config:clear
 
 EXPOSE 10000
