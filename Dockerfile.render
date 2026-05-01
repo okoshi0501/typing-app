@@ -18,18 +18,21 @@ COPY backend /var/www/html
 # Laravel セットアップ
 RUN composer install --no-dev --optimize-autoloader
 
-# .env を生成して APP_KEY を作る
+# .env を生成して APP_KEY を作る + PostgreSQL 設定を上書き
 RUN cp .env.example .env \
-    && php artisan key:generate
-
-# SQLite
-RUN mkdir -p database && touch database/database.sqlite
+    && php artisan key:generate \
+    && sed -i "s/DB_CONNECTION=.*/DB_CONNECTION=pgsql/" .env \
+    && sed -i "s/DB_HOST=.*/DB_HOST=dpg-d7q0fa3rjlhs73e2n230-a/" .env \
+    && sed -i "s/DB_PORT=.*/DB_PORT=5432/" .env \
+    && sed -i "s/DB_DATABASE=.*/DB_DATABASE=typing_app_db/" .env \
+    && sed -i "s/DB_USERNAME=.*/DB_USERNAME=typing_app_db_user/" .env \
+    && sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=1wb77SRHqEOiOIfWIgXzqJB32OED7A72/" .env
 
 # 権限
-RUN chown -R www-data:www-data database storage bootstrap/cache \
-    && chmod -R 775 database storage bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
-# migration（sessions テーブル含む）
+# PostgreSQL に migrate
 RUN php artisan migrate --force
 
 RUN php artisan config:clear
