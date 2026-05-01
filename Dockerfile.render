@@ -33,9 +33,6 @@ RUN cp .env.example .env \
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# PostgreSQL に migrate
-RUN php artisan migrate --force
-
 RUN php artisan config:clear
 
 EXPOSE 10000
